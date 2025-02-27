@@ -1,4 +1,6 @@
-// This component renders a custom 404 "Not Found" page.
+/**
+ * This component renders a custom 404 "Not Found" page.
+ */
 
 import { APP_NAME } from "@/lib/constants";
 import Image from "next/image";
