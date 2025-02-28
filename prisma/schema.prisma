@@ -4,29 +4,105 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+// This defines the Prisma client generator that creates the code used to interact with your database.
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider        = "prisma-client-js" // Specifies the Prisma Client for JavaScript as the generator.
+  previewFeatures = ["driverAdapters"] // Enables experimental features like driverAdapters.
 }
 
+// This defines the database connection configuration.
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "postgresql" // Specifies PostgreSQL as the database type.
+  url      = env("DATABASE_URL") // Retrieves the database connection URL from environment variables.
 }
 
+// This represents the "Product" model, defining the structure of the product table in the database.
 model Product {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String
-  slug        String   @unique(map: "product_slug_idx")
-  category    String
-  images      String[]
-  brand       String
-  description String
-  stock       Int
-  price       Decimal  @default(0) @db.Decimal(12, 2)
-  rating      Decimal  @default(0) @db.Decimal(3, 2)
-  numReviews  Int      @default(0)
-  isFeatured  Boolean  @default(false)
-  banner      String?
-  createdAt   DateTime @default(now()) @db.Timestamp(6)
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // Unique identifier, automatically generated as a UUID.
+  name        String // The name of the product.
+  slug        String   @unique(map: "product_slug_idx") // Ensures that the "slug" field is unique and assigns a custom name ("product_slug_idx") to the unique constraint in the database.
+  category    String // The category the product belongs to.
+  images      String[] // An array of strings representing image URLs of the product.
+  brand       String // The brand name of the product.
+  description String // A detailed description of the product.
+  stock       Int // The stock quantity of the product.
+  price       Decimal  @default(0) @db.Decimal(12, 2) // The price of the product, stored with up to 12 digits, 2 after the decimal point.
+  rating      Decimal  @default(0) @db.Decimal(3, 2) // The product's average rating, with up to 3 digits and 2 after the decimal.
+  numReviews  Int      @default(0) // The number of reviews for the product, default is 0.
+  isFeatured  Boolean  @default(false) // Indicates if the product is featured, default is false.
+  banner      String? // Optional URL for the product's banner image.
+  createdAt   DateTime @default(now()) @db.Timestamp(6) // Sets the "createdAt" field to store the exact timestamp with up to 6 fractional seconds precision in the database.
+}
+
+// This represents the "User" model, defining the structure of the user table.
+model User {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // Unique identifier, automatically generated as a UUID.
+  name          String    @default("NO_NAME") // The name of the user, defaults to "NO_NAME".
+  email         String    @unique(map: "user_email_idx") // Ensures that the "email" field is unique and assigns a custom name ("user_email_idx") to the unique constraint in the database.
+  password      String? // Optional password for the user.
+  role          String    @default("user") // The role of the user, defaults to "user".
+  emailVerified DateTime? @db.Timestamp(6) // Optional timestamp indicating when the email was verified. It uses @db.Timestamp(6) to store the exact date and time with up to 6 digits of fractional seconds precision (microseconds).
+  image         String? // Optional URL for the user's profile image.
+  address       Json?     @db.Json // Optional JSON object for storing the user's address.
+  paymentMethod String? // Optional string indicating the user's payment method.
+  createdAt     DateTime  @default(now()) @db.Timestamp(6) // Timestamp when the user account was created, defaults to the current time. It uses @db.Timestamp(6) to store the date and time with microsecond-level precision.
+  updatedAt     DateTime  @updatedAt // Automatically updates the timestamp whenever the user record is updated.
+  account       Account[] // Relationship with the Account model, one user can have multiple accounts.
+  session       Session[] // Relationship with the Session model, one user can have multiple sessions.
+}
+
+// This represents the "Account" model, defining third-party provider accounts for a user.
+model Account {
+  userId            String   @db.Uuid // Foreign key to link the account to a user.
+  type              String // The type of account (e.g., OAuth, email).
+  provider          String // The name of the provider (e.g., Google, GitHub).
+  providerAccountId String // The unique identifier for the account from the provider.
+  refresh_token     String? // Optional refresh token for the account.
+  access_token      String? // Optional access token for the account.
+  expires_at        Int? // Optional timestamp indicating when the token expires.
+  token_type        String? // Optional type of the token.
+  scope             String? // Optional scope of the access token.
+  id_token          String? // Optional ID token.
+  session_state     String? // Optional session state.
+  createdAt         DateTime @default(now()) // Timestamp when the account was created, defaults to the current time.
+  updatedAt         DateTime @updatedAt // Automatically updates the timestamp whenever the account record is updated.
+
+  // Defines a relationship between the Account and User models:
+  // - Links the "userId" field in this model to the "id" field in the User model.
+  // - "onDelete: Cascade" means if the user is deleted, all related accounts are also deleted.
+  // - "onUpdate: NoAction" prevents updates to the relationship if the User model's "id" field is updated.
+  // - "map: 'account_userId_user_id_fk'" assigns a custom name to the foreign key constraint in the database for better identification.
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "account_userId_user_id_fk")
+
+  // Creates a composite primary key using the "provider" and "providerAccountId" fields:
+  // - Ensures that each combination of "provider" and "providerAccountId" is unique in the database.
+  // - "map: 'account_provider_providerAccountId_pk'" gives the composite key a meaningful name in the database schema.
+  @@id([provider, providerAccountId], map: "account_provider_providerAccountId_pk")
+}
+
+// This represents the "Session" model, defining active user sessions.
+model Session {
+  sessionToken String   @id // Unique session token, acts as the primary key.
+  userId       String   @db.Uuid // Foreign key linking the session to a user.
+  expires      DateTime @db.Timestamp(6) // Timestamp when the session expires. The @db.Timestamp(6) ensures that the timestamp includes up to 6 digits of fractional seconds precision (microseconds),
+
+  // Defines a relationship between the Session and User models:
+  // - The "fields" argument specifies that the "userId" field in this model is the foreign key.
+  // - The "references" argument links "userId" to the "id" field in the User model.
+  // - "onDelete: Cascade" ensures that when a user is deleted, all related sessions are also removed.
+  // - "onUpdate: NoAction" prevents changes to the session's "userId" if the "id" field in the User model is updated.
+  // - "map: 'session_userId_user_id_fk'" assigns a custom name to the foreign key constraint in the database for easier identification.
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "session_userId_user_id_fk")
+}
+
+// This represents the "VerificationToken" model, defining tokens used for email or password verification.
+model VerificationToken {
+  identifier String // A unique identifier for the verification token.
+  token      String // The verification token itself.
+  expires    DateTime // Timestamp indicating when the token expires.
+
+  // Composite primary key combining "identifier" and "token".
+  // This ensures that each combination of "identifier" and "token" is unique.
+  // By combining these fields into a single key, the model guarantees that no duplicate tokens exist for the same identifier.
+  @@id([identifier, token])
 }
