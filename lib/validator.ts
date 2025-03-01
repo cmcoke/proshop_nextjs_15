@@ -1,8 +1,6 @@
 /**
- * This block of code uses the Zod library for validating and structuring data:
- * - Defines validation for a product insertion schema, ensuring all product properties adhere to specific rules.
- * - Includes a schema for validating user sign-in credentials, such as email and password.
- * - Enforces data integrity by requiring proper formats, lengths, and data types for fields.
+ *
+ *
  */
 
 import { z } from "zod"; // Imports the Zod library for creating schemas and validating data structures.
@@ -30,3 +28,20 @@ export const signInFormSchema = z.object({
   email: z.string().email("Invalid email address").min(3, "Email must be at least 3 characters"), // Ensures the email is a valid email address and has at least 3 characters.
   password: z.string().min(3, "Password must be at least 3 characters") // Ensures the password is a string and has at least 3 characters.
 });
+
+// Schema for signing up a user
+export const signUpFormSchema = z
+  .object({
+    name: z.string().min(3, "Name must be at least 3 characters"), // Validates that the name field is a string with a minimum length of 3 characters.
+    email: z.string().min(3, "Email must be at least 3 characters"), // Validates that the email field is a string with a minimum length of 3 characters.
+    password: z.string().min(3, "Password must be at least 3 characters"), // Validates that the password field is a string with a minimum length of 3 characters.
+    confirmPassword: z.string().min(3, "Confirm password must be at least 3 characters") // Validates that the confirmPassword field is a string with a minimum length of 3 characters.
+  })
+  // Refines the schema with a custom validation function.
+  .refine(
+    data => data.password === data.confirmPassword, // Custom validation function that checks if password and confirmPassword fields match.
+    {
+      message: "Passwords don't match", // Error message if the custom validation fails.
+      path: ["confirmPassword"] // Specifies the path where the error should be added, indicating the confirmPassword field.
+    }
+  );

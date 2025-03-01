@@ -30,3 +30,29 @@ export function formatNumberWithDecimal(num: number): string {
   const [int, decimal] = num.toString().split("."); // Splits the number into integer and decimal parts.
   return decimal ? `${int}.${decimal.padEnd(2, "0")}` : `${int}.00`; // Pads the decimal part with zeros if needed.
 }
+
+/**
+ * Format Errors
+ * This function `formatError` formats different types of errors into user-friendly messages.
+ * @param error - The error object to be formatted.
+ * @returns A string representing the formatted error message.
+ **/
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function formatError(error: any): string {
+  if (error.name === "ZodError") {
+    // Handle Zod error
+    const fieldErrors = Object.keys(error.errors).map(field => {
+      const message = error.errors[field].message; // Retrieves the error message for each field.
+      return typeof message === "string" ? message : JSON.stringify(message); // Converts the message to string if necessary.
+    });
+
+    return fieldErrors.join(". "); // Joins the field error messages into a single string.
+  } else if (error.name === "PrismaClientKnownRequestError" && error.code === "P2002") {
+    // Handle Prisma error
+    const field = error.meta?.target ? error.meta.target[0] : "Field"; // Retrieves the field name from the error metadata.
+    return `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`; // Formats the error message indicating the field already exists.
+  } else {
+    // Handle other errors
+    return typeof error.message === "string" ? error.message : JSON.stringify(error.message); // Converts the message to string if necessary.
+  }
+}

@@ -1,9 +1,6 @@
 /**
- * This block of code integrates NextAuth.js with Prisma for user authentication.
- * - It configures NextAuth.js using a Prisma adapter and a credentials provider.
- * - Users can sign in using their email and password, which are verified against the database.
- * - Custom pages, JWT session strategy, and session callbacks are defined for better flexibility.
- * - Exports authentication handlers (e.g., signIn and signOut) to handle auth-related actions.
+ *
+ *
  */
 
 import { compareSync } from "bcrypt-ts-edge"; // Imports the compareSync function from bcrypt-ts-edge for password comparison.
@@ -66,19 +63,47 @@ export const config = {
     })
   ],
 
-  // Defines custom callback functions for NextAuth.js.
-  // - The session callback customizes the session object by adding user-related data.
-  // - It ensures the user ID is always included in the session and updates the session when triggered.
+  //
   callbacks: {
+    //
     async session({ session, user, trigger, token }: any) {
       // Set the user ID on the session object using the token.
       session.user.id = token.sub;
+      session.user.name = token.name;
+      session.user.role = token.role;
+
+      // console.log(token);
 
       // Update the session object with the user's name if triggered by an update.
       if (trigger === "update") {
         session.user.name = user.name;
       }
       return session; // Return the modified session object.
+    },
+    //
+    async jwt({ token, user, trigger, session }: any) {
+      // Assign user fields to token
+      if (user) {
+        token.role = user.role;
+
+        // If user has no name, use email as their default name Example if email is tom@gmail.com then tom will be used as the name
+        if (user.name === "NO_NAME") {
+          token.name = user.email!.split("@")[0];
+
+          // Update the user in the database with the new name
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { name: token.name }
+          });
+        }
+      }
+
+      // Handle session updates (e.g., name change)
+      if (session?.user.name && trigger === "update") {
+        token.name = session.user.name;
+      }
+
+      return token;
     }
   }
 } satisfies NextAuthConfig; // Ensures the configuration satisfies the NextAuthConfig type definition.
