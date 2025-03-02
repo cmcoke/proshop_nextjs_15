@@ -45,3 +45,26 @@ export const signUpFormSchema = z
       path: ["confirmPassword"] // Specifies the path where the error should be added, indicating the confirmPassword field.
     }
   );
+
+// Cart Schemas //
+
+// Defines the schema for a single cart item
+export const cartItemSchema = z.object({
+  productId: z.string().min(1, "Product is required"), // Validates that productId is a non-empty string.
+  name: z.string().min(1, "Name is required"), // Validates that name is a non-empty string.
+  slug: z.string().min(1, "Slug is required"), // Validates that slug is a non-empty string.
+  qty: z.number().int().nonnegative("Quantity must be a positive number"), // Validates that qty is a non-negative integer.
+  image: z.string().min(1, "Image is required"), // Validates that image is a non-empty string.
+  price: currency // Validates the price is using the 'currency' format.
+});
+
+// Defines the schema for inserting a cart
+export const insertCartSchema = z.object({
+  items: z.array(cartItemSchema), // Validates that items is an array of cart items following cartItemSchema.
+  itemsPrice: currency, // Validates that itemsPrice follows the currency format.
+  totalPrice: currency, // Validates that totalPrice follows the currency format.
+  shippingPrice: currency, // Validates that shippingPrice follows the currency format.
+  taxPrice: currency, // Validates that taxPrice follows the currency format.
+  sessionCartId: z.string().min(1, "Session cart id is required"), // Validates that sessionCartId is a non-empty string.
+  userId: z.string().optional().nullable() // Validates that userId is an optional or nullable string.
+});
