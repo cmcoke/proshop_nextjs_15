@@ -56,3 +56,20 @@ export function formatError(error: any): string {
     return typeof error.message === "string" ? error.message : JSON.stringify(error.message); // Converts the message to string if necessary.
   }
 }
+
+//  This function `round2` takes a number or string input and rounds it to 2 decimal places. It handles both number and string inputs, converting and rounding as needed, ensuring precision with floating-point operations.
+export const round2 = (value: number | string) => {
+  if (typeof value === "number") {
+    // Adds a small constant (Number.EPSILON) to the value to avoid floating-point precision issues,
+    // then multiplies by 100 to shift the decimal point, rounds to the nearest whole number,
+    // and finally divides by 100 to shift the decimal point back, resulting in a number rounded to 2 decimal places.
+    return Math.round((value + Number.EPSILON) * 100) / 100;
+  } else if (typeof value === "string") {
+    // Converts the string value to a number, adds a small constant (Number.EPSILON) to avoid floating-point precision issues,
+    // then multiplies by 100 to shift the decimal point, rounds to the nearest whole number,
+    // and finally divides by 100 to shift the decimal point back, resulting in a number rounded to 2 decimal places.
+    return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+  } else {
+    throw new Error("value is not a number nor a string");
+  }
+};

@@ -4,12 +4,12 @@
  */
 
 import { compareSync } from "bcrypt-ts-edge"; // Imports the compareSync function from bcrypt-ts-edge for password comparison.
-import type { NextAuthConfig } from "next-auth"; // Imports the type definition for NextAuth configuration.
 import NextAuth from "next-auth"; // Imports the NextAuth function for authentication setup.
 import CredentialsProvider from "next-auth/providers/credentials"; // Imports the credentials provider for custom email/password authentication.
 
 import { prisma } from "@/db/prisma"; // Imports the Prisma client for interacting with the database.
 import { PrismaAdapter } from "@auth/prisma-adapter"; // Imports the Prisma adapter to integrate Prisma with NextAuth.js.
+import { authConfig } from "./auth.config";
 
 export const config = {
   // Configures the custom pages for NextAuth.js, specifying routes for the sign-in page and error handling.
@@ -20,7 +20,7 @@ export const config = {
 
   // Configures the session management for NextAuth.js, using JSON Web Tokens (JWT) for stateless authentication.
   session: {
-    strategy: "jwt", // Sets the session strategy to use JSON Web Tokens (JWT).
+    strategy: "jwt" as const, // Sets the session strategy to use JSON Web Tokens (JWT).
     maxAge: 30 * 24 * 60 * 60 // Sets session expiration to 30 days (30 days * 24 hours * 60 minutes * 60 seconds = 2,592,000 seconds, which is equivalent to 30 days.).
   },
 
@@ -104,9 +104,10 @@ export const config = {
       }
 
       return token;
-    }
+    },
+    ...authConfig.callbacks
   }
-} satisfies NextAuthConfig; // Ensures the configuration satisfies the NextAuthConfig type definition.
+};
 
 // Exports authentication-related handlers and functions (e.g., signIn and signOut) for use in the application.
 export const { handlers, auth, signIn, signOut } = NextAuth(config);

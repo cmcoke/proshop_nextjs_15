@@ -9,7 +9,7 @@ import { Inter } from "next/font/google"; // Imports the Inter font from Google 
 import "@/assets/styles/globals.css"; // Imports global CSS styles.
 import { APP_NAME, APP_DESCRIPTION, SERVER_URL } from "@/lib/constants"; // Imports constants for app name, description, and server URL.
 import { ThemeProvider } from "next-themes"; // Imports the ThemeProvider for managing themes.
-
+import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] }); // Initializes the Inter font with Latin subset.
 
 /**
@@ -39,6 +39,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         {/* Wraps the children components with theme support */}
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           {children}
+          <Toaster richColors />
         </ThemeProvider>
       </body>
     </html>

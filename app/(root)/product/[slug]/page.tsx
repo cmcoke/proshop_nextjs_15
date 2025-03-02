@@ -8,9 +8,10 @@ import { notFound } from "next/navigation"; // Imports the notFound function for
 import ProductPrice from "@/components/shared/product/product-price"; // Imports the ProductPrice component for displaying product prices.
 import { Card, CardContent } from "@/components/ui/card"; // Imports Card components from the UI library.
 import { getProductBySlug } from "@/lib/actions/product.actions"; // Imports the getProductBySlug function for fetching product data.
-import { Button } from "@/components/ui/button"; // Imports the Button component from the UI library.
 import { Badge } from "@/components/ui/badge"; // Imports the Badge component from the UI library.
 import ProductImages from "@/components/shared/product/product-images"; // Imports the ProductImages component for displaying product images.
+import AddToCart from "@/components/shared/product/add-to-cart";
+import { getMyCart } from "@/lib/actions/cart.actions";
 
 /**
  * This function `ProductDetailsPage` fetches and displays details about a specific product.
@@ -22,6 +23,8 @@ const ProductDetailsPage = async (props: { params: Promise<{ slug: string }> }) 
   const product = await getProductBySlug(slug); // Fetches the product data based on the slug.
 
   if (!product) notFound(); // If the product is not found, call the notFound function.
+
+  const cart = await getMyCart();
 
   return (
     <section>
@@ -69,7 +72,17 @@ const ProductDetailsPage = async (props: { params: Promise<{ slug: string }> }) 
               {/* Displays the "Add to cart" button if the product is in stock. */}
               {product.stock > 0 && (
                 <div className=" flex-center">
-                  <Button className="w-full">Add to cart</Button>
+                  <AddToCart
+                    cart={cart}
+                    item={{
+                      productId: product.id,
+                      name: product.name,
+                      slug: product.slug,
+                      price: product.price,
+                      qty: 1,
+                      image: product.images![0]
+                    }}
+                  />
                 </div>
               )}
             </CardContent>
