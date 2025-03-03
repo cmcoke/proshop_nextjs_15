@@ -73,3 +73,24 @@ export const round2 = (value: number | string) => {
     throw new Error("value is not a number nor a string");
   }
 };
+
+// Creates a new instance of the Intl.NumberFormat object for formatting numbers as currency.
+const CURRENCY_FORMATTER = new Intl.NumberFormat("en-US", {
+  currency: "USD", // Sets the currency to USD (United States Dollar).
+  style: "currency", // Specifies the formatting style as currency.
+  minimumFractionDigits: 2 // Ensures that the formatted number has at least 2 decimal places.
+});
+
+// Function to format a given amount as currency.
+export function formatCurrency(amount: number | string | null) {
+  // If the amount is a number, formats it as currency using CURRENCY_FORMATTER.
+  if (typeof amount === "number") {
+    return CURRENCY_FORMATTER.format(amount);
+    // If the amount is a string, converts it to a number and then formats it as currency using CURRENCY_FORMATTER.
+  } else if (typeof amount === "string") {
+    return CURRENCY_FORMATTER.format(Number(amount));
+    // If the amount is neither a number nor a string, returns "NaN" (Not a Number) to indicate an invalid value.
+  } else {
+    return "NaN";
+  }
+}
