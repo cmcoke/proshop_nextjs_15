@@ -6,11 +6,12 @@
 "use server"; // Specifies that the code is designed to run on the server side.
 
 import { isRedirectError } from "next/dist/client/components/redirect-error"; // Imports a helper function to handle redirect-related errors.
-import { signIn, signOut } from "@/auth"; // Imports `signIn` and `signOut` functions for managing user authentication.
-import { signInFormSchema, signUpFormSchema } from "../validator"; // Imports validation schemas for sign-in and sign-up forms.
+import { auth, signIn, signOut } from "@/auth"; // Imports `signIn` and `signOut` functions for managing user authentication.
+import { shippingAddressSchema, signInFormSchema, signUpFormSchema } from "../validator"; // Imports validation schemas for sign-in and sign-up forms.
 import { hashSync } from "bcrypt-ts-edge"; // Imports the hashSync function from bcrypt-ts-edge for password hashing.
 import { prisma } from "@/db/prisma"; // Imports the Prisma client for interacting with the database.
 import { formatError } from "../utils";
+import { ShippingAddress } from "@/types";
 
 // Handles user sign-in with email and password credentials.
 export async function signInWithCredentials(prevState: unknown, formData: FormData) {
@@ -90,5 +91,50 @@ export async function signUp(prevState: unknown, formData: FormData) {
       success: false,
       message: formatError(error)
     };
+  }
+}
+
+// Get user by ID
+export async function getUserById(userId: string) {
+  // Finds the first user in the database whose `id` matches the given `userId`.
+  const user = await prisma.user.findFirst({
+    where: { id: userId }
+  });
+
+  if (!user) throw new Error("User not found"); // Throws an error if no user is found with the given `userId`.
+  return user; // Returns the found user object.
+}
+
+// Update user's address
+export async function updateUserAddress(data: ShippingAddress) {
+  // Start a try block to handle any errors that may occur during the update process.
+  try {
+    const session = await auth(); // Retrieves the current user session.
+
+    // Finds the current user in the database using the user ID from the session.
+    const currentUser = await prisma.user.findFirst({
+      where: { id: session?.user?.id }
+    });
+
+    // Throws an error if no user is found with the given user ID.
+    if (!currentUser) throw new Error("User not found");
+
+    // Parses and validates the provided address data using the shippingAddressSchema.
+    const address = shippingAddressSchema.parse(data);
+
+    // Updates the user's address in the database with the validated address data.
+    await prisma.user.update({
+      where: { id: currentUser.id },
+      data: { address }
+    });
+
+    // Returns a success response if the address update is successful.
+    return {
+      success: true,
+      message: "User updated successfully"
+    };
+  } catch (error) {
+    // Returns a failure response with an error message if an error occurs during the update process.
+    return { success: false, message: formatError(error) };
   }
 }

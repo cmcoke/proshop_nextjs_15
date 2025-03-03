@@ -68,3 +68,14 @@ export const insertCartSchema = z.object({
   sessionCartId: z.string().min(1, "Session cart id is required"), // Validates that sessionCartId is a non-empty string.
   userId: z.string().optional().nullable() // Validates that userId is an optional or nullable string.
 });
+
+// Defines the schema for validating a shipping address.
+export const shippingAddressSchema = z.object({
+  fullName: z.string().min(3, "Name must be at least 3 characters"), // Validates that `fullName` is a string with a minimum length of 3 characters.
+  streetAddress: z.string().min(3, "Address must be at least 3 characters"), // Validates that `streetAddress` is a string with a minimum length of 3 characters.
+  city: z.string().min(3, "city must be at least 3 characters"), // Validates that `city` is a string with a minimum length of 3 characters.
+  postalCode: z.string().min(3, "Postal code must be at least 3 characters"), // Validates that `postalCode` is a string with a minimum length of 3 characters.
+  country: z.string().min(3, "Country must be at least 3 characters"), // Validates that `country` is a string with a minimum length of 3 characters.
+  lat: z.number().optional(), // Validates that `lat` is an optional number representing latitude.
+  lng: z.number().optional() // Validates that `lng` is an optional number representing longitude.
+});
