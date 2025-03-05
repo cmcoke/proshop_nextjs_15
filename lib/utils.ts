@@ -94,3 +94,67 @@ export function formatCurrency(amount: number | string | null) {
     return "NaN";
   }
 }
+
+// Shorten UUID to 6 characters
+export function formatId(id: string) {
+  // Returns a string consisting of two dots followed by the last 6 characters of the input string 'id'.
+  return `..${id.substring(id.length - 6)}`;
+}
+
+// Testing purposes
+// const id1 = "439dde63-541a-4cc9-891a-ffeae193abc0";
+// console.log(formatId(id1)); // Expected: "..93abc0"
+// const id2 = "1234567890abcdef";
+// console.log(formatId(id2)); // Expected: "..abcdef"
+
+// Format the date in 3 different ways (Date & Time, Date Only, Time Only)
+export const formatDateTime = (dateString: Date) => {
+  // Options for formatting the date and time
+  const dateTimeOptions: Intl.DateTimeFormatOptions = {
+    month: "short", // abbreviated month name (e.g., 'Oct')
+    year: "numeric", // abbreviated month name (e.g., 'Oct')
+    day: "numeric", // numeric day of the month (e.g., '25')
+    hour: "numeric", // numeric hour (e.g., '8')
+    minute: "numeric", // numeric minute (e.g., '30')
+    hour12: true // use 12-hour clock (true) or 24-hour clock (false)
+  };
+
+  // Options for formatting the date only
+  const dateOptions: Intl.DateTimeFormatOptions = {
+    weekday: "short", // abbreviated weekday name (e.g., 'Mon')
+    month: "short", // abbreviated month name (e.g., 'Oct')
+    year: "numeric", // numeric year (e.g., '2023')
+    day: "numeric" // numeric day of the month (e.g., '25')
+  };
+
+  // Options for formatting the time only
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: "numeric", // numeric hour (e.g., '8')
+    minute: "numeric", // numeric minute (e.g., '30')
+    hour12: true // use 12-hour clock (true) or 24-hour clock (false)
+  };
+
+  const formattedDateTime: string = new Date(dateString).toLocaleString("en-US", dateTimeOptions); // Formats the date and time string using the 'dateTimeOptions' options.
+
+  const formattedDate: string = new Date(dateString).toLocaleString("en-US", dateOptions); // Formats the date string using the 'dateOptions' options.
+
+  const formattedTime: string = new Date(dateString).toLocaleString("en-US", timeOptions); // Formats the time string using the 'timeOptions' options.
+
+  // Returns an object with formatted date and time, date only, and time only strings
+  return {
+    dateTime: formattedDateTime, // The formatted date and time string.
+    dateOnly: formattedDate, // The formatted date string.
+    timeOnly: formattedTime // The formatted time string.
+  };
+};
+
+// // Import or copy the function here if necessary
+// const testDate = new Date("2023-10-25T08:30:00Z"); // Example date string
+
+// // Call the formatDateTime function
+// const formatted = formatDateTime(testDate);
+
+// // Log the results
+// console.log("Full DateTime:", formatted.dateTime); // Expected output: "Oct 25, 2023, 1:30 AM" (adjusted for timezone)
+// console.log("Date Only:", formatted.dateOnly); // Expected output: "Wed, Oct 25, 2023"
+// console.log("Time Only:", formatted.timeOnly); // Expected output: "1:30 AM" (adjusted for timezone)
