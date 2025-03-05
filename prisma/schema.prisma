@@ -18,20 +18,21 @@ datasource db {
 
 // This represents the "Product" model, defining the structure of the product table in the database.
 model Product {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // Unique identifier, automatically generated as a UUID.
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // Unique identifier, automatically generated as a UUID.
   name        String // The name of the product.
-  slug        String   @unique(map: "product_slug_idx") // Ensures that the "slug" field is unique and assigns a custom name ("product_slug_idx") to the unique constraint in the database.
+  slug        String      @unique(map: "product_slug_idx") // Ensures that the "slug" field is unique and assigns a custom name ("product_slug_idx") to the unique constraint in the database.
   category    String // The category the product belongs to.
   images      String[] // An array of strings representing image URLs of the product.
   brand       String // The brand name of the product.
   description String // A detailed description of the product.
   stock       Int // The stock quantity of the product.
-  price       Decimal  @default(0) @db.Decimal(12, 2) // The price of the product, stored with up to 12 digits, 2 after the decimal point.
-  rating      Decimal  @default(0) @db.Decimal(3, 2) // The product's average rating, with up to 3 digits and 2 after the decimal.
-  numReviews  Int      @default(0) // The number of reviews for the product, default is 0.
-  isFeatured  Boolean  @default(false) // Indicates if the product is featured, default is false.
+  price       Decimal     @default(0) @db.Decimal(12, 2) // The price of the product, stored with up to 12 digits, 2 after the decimal point.
+  rating      Decimal     @default(0) @db.Decimal(3, 2) // The product's average rating, with up to 3 digits and 2 after the decimal.
+  numReviews  Int         @default(0) // The number of reviews for the product, default is 0.
+  isFeatured  Boolean     @default(false) // Indicates if the product is featured, default is false.
   banner      String? // Optional URL for the product's banner image.
-  createdAt   DateTime @default(now()) @db.Timestamp(6) // Sets the "createdAt" field to store the exact timestamp with up to 6 fractional seconds precision in the database.
+  createdAt   DateTime    @default(now()) @db.Timestamp(6) // Sets the "createdAt" field to store the exact timestamp with up to 6 fractional seconds precision in the database.
+  OrderItem   OrderItem[] // Defines a one-to-many relationship with the OrderItem model, indicating that a product can be associated with multiple order items.
 }
 
 // This represents the "User" model, defining the structure of the user table.
@@ -50,6 +51,7 @@ model User {
   account       Account[] // Relationship with the Account model, one user can have multiple accounts.
   session       Session[] // Relationship with the Session model, one user can have multiple sessions.
   Cart          Cart[] // Relationship with the Cart model, one user can have multiple carts.
+  Order         Order[] // Relationship with the Order model, one user can have multiple orders.
 }
 
 // This represents the "Account" model, defining third-party provider accounts for a user.
@@ -126,4 +128,60 @@ model Cart {
   // If the user's ID is updated, no action is taken on the cart (onUpdate: NoAction).
   // The relation is mapped to the foreign key constraint `cart_userId_user_id_fk`.
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "cart_userId_user_id_fk")
+}
+
+// The Order model defines the structure of an order in the database.
+model Order {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // The unique identifier for the order. It is generated using a random UUID.
+  userId          String    @db.Uuid // The unique identifier for the user associated with the order.
+  shippingAddress Json      @db.Json // The JSON object containing the shipping address for the order.
+  paymentMethod   String // The payment method used for the order.
+  paymentResult   Json?     @db.Json // An optional JSON object containing the payment result information.
+  itemsPrice      Decimal   @db.Decimal(12, 2) // The total price of the items in the order, with a precision of 12 and scale of 2.
+  shippingPrice   Decimal   @db.Decimal(12, 2) // The shipping price for the order, with a precision of 12 and scale of 2.
+  taxPrice        Decimal   @db.Decimal(12, 2) // The tax price for the order, with a precision of 12 and scale of 2.
+  totalPrice      Decimal   @db.Decimal(12, 2) // The total price of the order, with a precision of 12 and scale of 2.
+  isPaid          Boolean   @default(false) // Indicates whether the order has been paid for. Defaults to false.
+  paidAt          DateTime? @db.Timestamp(6) // An optional timestamp indicating when the order was paid.
+  isDelivered     Boolean   @default(false) // Indicates whether the order has been delivered. Defaults to false.
+  deliveredAt     DateTime? @db.Timestamp(6) // An optional timestamp indicating when the order was delivered.
+  createdAt       DateTime  @default(now()) @db.Timestamp(6) // The timestamp indicating when the order was created. Defaults to the current time.
+
+  // Defines a relation between the Order model and the User model.
+  // The `user` field is a foreign key that references the `id` field in the User model.
+  // The `onDelete: Cascade` option means that when a user is deleted, all their associated orders will also be deleted.
+  // The `onUpdate: NoAction` option means that when a user's ID is updated, no action will be taken on the associated orders.
+  // The `map: "order_userId_user_id_fk"` option specifies the name of the foreign key constraint in the database.
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "order_userId_user_id_fk")
+
+  orderItems OrderItem[] // An array of OrderItem objects representing the items in the order.
+}
+
+// The OrderItem model defines the structure of an order item in the database.
+model OrderItem {
+  orderId   String  @db.Uuid // The unique identifier for the order associated with this order item.
+  productId String  @db.Uuid // The unique identifier for the product associated with this order item.
+  qty       Int // The quantity of the product in the order item.
+  price     Decimal @db.Decimal(12, 2) // The price of the product in the order item, with a precision of 12 and scale of 2.
+  name      String // The name of the product in the order item.
+  slug      String // The slug (URL-friendly identifier) for the product in the order item.
+  image     String // The URL of the image for the product in the order item.
+
+  // Defines a relation between the OrderItem model and the Order model.
+  // The `order` field is a foreign key that references the `id` field in the Order model.
+  // The `onDelete: Cascade` option means that when an order is deleted, all its associated order items will also be deleted.
+  // The `onUpdate: NoAction` option means that when an order's ID is updated, no action will be taken on the associated order items.
+  // The `map: "orderItems_orderId_order_id_fk"` option specifies the name of the foreign key constraint in the database.
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "orderItems_orderId_order_id_fk")
+
+  // Defines a relation between the OrderItem model and the Product model.
+  // The `product` field is a foreign key that references the `id` field in the Product model.
+  // The `onDelete: Cascade` option means that when a product is deleted, all its associated order items will also be deleted.
+  // The `onUpdate: NoAction` option means that when a product's ID is updated, no action will be taken on the associated order items.
+  // The `map: "orderItems_productId_product_id_fk"` option specifies the name of the foreign key constraint in the database.
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "orderItems_productId_product_id_fk")
+
+  // Defines a composite primary key for the OrderItem model, consisting of the `orderId` and `productId` fields.
+  // The `map: "orderItems_orderId_productId_pk"` option specifies the name of the primary key constraint in the database.
+  @@id([orderId, productId], map: "orderItems_orderId_productId_pk")
 }

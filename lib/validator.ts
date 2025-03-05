@@ -5,6 +5,7 @@
 
 import { z } from "zod"; // Imports the Zod library for creating schemas and validating data structures.
 import { formatNumberWithDecimal } from "./utils"; // Imports a utility function to format numbers with two decimal places.
+import { PAYMENT_METHODS } from "./constants"; // Imports the PAYMENT_METHODS array from the constants file.
 
 // Validates that the price is a string formatted with exactly two decimal places.
 const currency = z.string().refine(value => /^\d+(\.\d{2})?$/.test(formatNumberWithDecimal(Number(value))), "Price must have exactly two decimal places (e.g., 49.99)");
@@ -79,3 +80,15 @@ export const shippingAddressSchema = z.object({
   lat: z.number().optional(), // Validates that `lat` is an optional number representing latitude.
   lng: z.number().optional() // Validates that `lng` is an optional number representing longitude.
 });
+
+// Defines the schema for payment
+export const paymentMethodSchema = z
+  .object({
+    // Defines the 'type' property as a string with a minimum length of 1 character and a custom error message.
+    type: z.string().min(1, "Payment method is required")
+  })
+  // Refines the schema to include additional custom validation.
+  .refine(data => PAYMENT_METHODS.includes(data.type), {
+    path: ["type"], // Specifies the path to the 'type' property for validation error messages.
+    message: "Invalid payment method" // Provides a custom error message for invalid payment methods.
+  });

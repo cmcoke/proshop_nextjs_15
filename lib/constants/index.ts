@@ -20,3 +20,11 @@ export const shippingAddressDefaultValues = {
   postalCode: "",
   country: ""
 };
+
+// Defines an array of payment methods. If the environment variable PAYMENT_METHODS is set, it splits the string into an array of payment methods.
+// If the environment variable is not set, it defaults to an array containing "PayPal", "Stripe", and "CashOnDelivery".
+export const PAYMENT_METHODS = process.env.PAYMENT_METHODS ? process.env.PAYMENT_METHODS.split(", ") : ["PayPal", "Stripe", "CashOnDelivery"];
+
+// Defines the default payment method. If the environment variable DEFAULT_PAYMENT_METHOD is set, it uses its value.
+// If the environment variable is not set, it defaults to "PayPal".
+export const DEFAULT_PAYMENT_METHOD = process.env.DEFAULT_PAYMENT_METHOD || "PayPal";

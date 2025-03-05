@@ -7,11 +7,12 @@
 
 import { isRedirectError } from "next/dist/client/components/redirect-error"; // Imports a helper function to handle redirect-related errors.
 import { auth, signIn, signOut } from "@/auth"; // Imports `signIn` and `signOut` functions for managing user authentication.
-import { shippingAddressSchema, signInFormSchema, signUpFormSchema } from "../validator"; // Imports validation schemas for sign-in and sign-up forms.
+import { shippingAddressSchema, signInFormSchema, signUpFormSchema, paymentMethodSchema } from "../validator"; // Imports various schemas for validation from the validator file.
 import { hashSync } from "bcrypt-ts-edge"; // Imports the hashSync function from bcrypt-ts-edge for password hashing.
 import { prisma } from "@/db/prisma"; // Imports the Prisma client for interacting with the database.
 import { formatError } from "../utils";
 import { ShippingAddress } from "@/types";
+import { z } from "zod"; // Imports Zod for schema validation.
 
 // Handles user sign-in with email and password credentials.
 export async function signInWithCredentials(prevState: unknown, formData: FormData) {
@@ -129,6 +130,41 @@ export async function updateUserAddress(data: ShippingAddress) {
     });
 
     // Returns a success response if the address update is successful.
+    return {
+      success: true,
+      message: "User updated successfully"
+    };
+  } catch (error) {
+    // Returns a failure response with an error message if an error occurs during the update process.
+    return { success: false, message: formatError(error) };
+  }
+}
+
+// Update user's payment method.
+// The 'data: z.infer<typeof paymentMethodSchema>' refers to the function parameter 'data', which is inferred to have the structure defined by 'paymentMethodSchema' using Zod.
+export async function updateUserPaymentMethod(data: z.infer<typeof paymentMethodSchema>) {
+  // Start a try block to handle any errors that may occur during the update process.
+  try {
+    const session = await auth(); // Retrieves the current user session.
+
+    // Finds the current user in the database using the user ID from the session.
+    const currentUser = await prisma.user.findFirst({
+      where: { id: session?.user?.id } // Matches the user ID from the session.
+    });
+
+    // Throws an error if no user is found with the given user ID.
+    if (!currentUser) throw new Error("User not found");
+
+    // Parses and validates the provided payment method data using the paymentMethodSchema.
+    const paymentMethod = paymentMethodSchema.parse(data);
+
+    // Updates the user's payment method in the database with the validated payment method type.
+    await prisma.user.update({
+      where: { id: currentUser.id }, // Matches the user ID to update the correct user.
+      data: { paymentMethod: paymentMethod.type } // Updates the user's payment method with the validated type.
+    });
+
+    // Returns a success response if the payment method update is successful.
     return {
       success: true,
       message: "User updated successfully"
