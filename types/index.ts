@@ -4,7 +4,7 @@
  */
 
 import { z } from "zod"; // Imports Zod library for schema validation.
-import { cartItemSchema, insertCartSchema, insertProductSchema, shippingAddressSchema } from "@/lib/validator"; // Imports Zod schemas for  product validation, cart, cart items, shipping
+import { cartItemSchema, insertCartSchema, insertProductSchema, shippingAddressSchema, insertOrderItemSchema, insertOrderSchema } from "@/lib/validator";
 
 // Defines the TypeScript type for a product by inferring from the insertProductSchema and extending it with additional properties.
 export type Product = z.infer<typeof insertProductSchema> & {
@@ -23,3 +23,19 @@ export type CartItem = z.infer<typeof cartItemSchema>;
 // Defines a TypeScript type `ShippingAddress` by inferring it from the `shippingAddressSchema`.
 // This ensures that the `ShippingAddress` type matches the structure and validation rules defined in the `shippingAddressSchema`.
 export type ShippingAddress = z.infer<typeof shippingAddressSchema>;
+
+// Defines a TypeScript type 'OrderItem' based on the Zod schema 'insertOrderItemSchema'.
+// The 'z.infer<typeof insertOrderItemSchema>' ensures that the OrderItem type has the same structure and constraints as defined in the insertOrderItemSchema Zod schema.
+export type OrderItem = z.infer<typeof insertOrderItemSchema>;
+
+// Defines a TypeScript type 'Order' based on the Zod schema 'insertOrderSchema' and extends it with additional fields.
+export type Order = z.infer<typeof insertOrderSchema> & {
+  id: string; // Adds an 'id' field of type string to the Order type.
+  createdAt: Date; // Adds a 'createdAt' field of type Date to the Order type.
+  isPaid: boolean; // Adds an 'isPaid' field of type boolean to the Order type.
+  paidAt: Date | null; // Adds a 'paidAt' field of type Date or null to the Order type.
+  isDelivered: boolean; // Adds an 'isDelivered' field of type boolean to the Order type.
+  deliveredAt: Date | null; // Adds a 'deliveredAt' field of type Date or null to the Order type.
+  orderitems: OrderItem[]; // Adds an 'orderitems' field which is an array of OrderItem type to the Order type.
+  user: { name: string; email: string }; // Adds a 'user' field which is an object containing 'name' and 'email' fields of type string to the Order type.
+};

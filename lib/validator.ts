@@ -92,3 +92,30 @@ export const paymentMethodSchema = z
     path: ["type"], // Specifies the path to the 'type' property for validation error messages.
     message: "Invalid payment method" // Provides a custom error message for invalid payment methods.
   });
+
+// Insert Order Schema
+export const insertOrderSchema = z.object({
+  userId: z.string().min(1, "User is required"), // Defines the 'userId' field as a non-empty string with a custom error message if it's empty.
+  itemsPrice: currency, // Defines the 'itemsPrice' field and uses a predefined schema for currency validation.
+  shippingPrice: currency, // Defines the 'shippingPrice' field and uses a predefined schema for currency validation.
+  taxPrice: currency, // Defines the 'taxPrice' field and uses a predefined schema for currency validation.
+  totalPrice: currency, // Defines the 'totalPrice' field and uses a predefined schema for currency validation.
+
+  // Defines the 'paymentMethod' field as a string.
+  // The refine method adds custom validation to ensure the value is included in the PAYMENT_METHODS array.
+  // If the value is not valid, a custom error message "Invalid payment method" is returned.
+  paymentMethod: z.string().refine(data => PAYMENT_METHODS.includes(data), {
+    message: "Invalid payment method"
+  }),
+  shippingAddress: shippingAddressSchema // Defines the 'shippingAddress' field and uses a predefined schema for address validation.
+});
+
+// Insert Order Item Schema
+export const insertOrderItemSchema = z.object({
+  productId: z.string(), // Defines the 'productId' field as a string.
+  slug: z.string(), // Defines the 'slug' field as a string.
+  image: z.string(), // Defines the 'image' field as a string.
+  name: z.string(), // Defines the 'name' field as a string.
+  price: currency, // Defines the 'price' field and uses a predefined schema for currency validation.
+  qty: z.number() // Defines the 'qty' field as a number.
+});
