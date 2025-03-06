@@ -119,3 +119,11 @@ export const insertOrderItemSchema = z.object({
   price: currency, // Defines the 'price' field and uses a predefined schema for currency validation.
   qty: z.number() // Defines the 'qty' field as a number.
 });
+
+// Defines paypal payment result
+export const paymentResultSchema = z.object({
+  id: z.string(), // Defines the 'id' field as a string.
+  status: z.string(), // Defines the 'status' field as a string.
+  email_address: z.string(), // Defines the 'email_address' field as a string.
+  pricePaid: z.string() // Defines the 'pricePaid' field as a string.
+});

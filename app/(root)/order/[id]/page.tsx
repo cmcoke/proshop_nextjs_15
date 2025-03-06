@@ -7,7 +7,7 @@
 
 import { getOrderById } from "@/lib/actions/order.actions";
 import { notFound } from "next/navigation";
-import OrderDetailsTable from "../order-details-table";
+import OrderDetailsTable from "./order-details-table";
 import { ShippingAddress } from "@/types";
 
 // Defines the metadata for this page, including the title.
@@ -41,6 +41,7 @@ const OrderDetailsPage = async (props: {
         ...order, // Spreads the order data to include all existing properties.
         shippingAddress: order.shippingAddress as ShippingAddress // Ensures `shippingAddress` is correctly typed as `ShippingAddress`.
       }}
+      paypalClientId={process.env.PAYPAL_CLIENT_ID || "sb"}
     />
   );
 };

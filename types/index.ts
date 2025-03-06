@@ -4,7 +4,7 @@
  */
 
 import { z } from "zod"; // Imports Zod library for schema validation.
-import { cartItemSchema, insertCartSchema, insertProductSchema, shippingAddressSchema, insertOrderItemSchema, insertOrderSchema } from "@/lib/validator";
+import { cartItemSchema, insertCartSchema, insertProductSchema, shippingAddressSchema, insertOrderItemSchema, insertOrderSchema, paymentResultSchema } from "@/lib/validator";
 
 // Defines the TypeScript type for a product by inferring from the insertProductSchema and extending it with additional properties.
 export type Product = z.infer<typeof insertProductSchema> & {
@@ -39,3 +39,7 @@ export type Order = z.infer<typeof insertOrderSchema> & {
   orderitems: OrderItem[]; // Adds an 'orderitems' field which is an array of OrderItem type to the Order type.
   user: { name: string; email: string }; // Adds a 'user' field which is an object containing 'name' and 'email' fields of type string to the Order type.
 };
+
+// Defines a TypeScript type 'PaymentResult' based on the Zod schema 'paymentResultSchema'.
+// The 'z.infer<typeof paymentResultSchema>' ensures that the PaymentResult type has the same structure and constraints as defined in the paymentResultSchema Zod schema.
+export type PaymentResult = z.infer<typeof paymentResultSchema>;
