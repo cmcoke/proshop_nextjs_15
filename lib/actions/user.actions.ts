@@ -13,6 +13,7 @@ import { prisma } from "@/db/prisma"; // Imports the Prisma client for interacti
 import { formatError } from "../utils";
 import { ShippingAddress } from "@/types";
 import { z } from "zod"; // Imports Zod for schema validation.
+import { getMyCart } from "./cart.actions";
 
 // Handles user sign-in with email and password credentials.
 export async function signInWithCredentials(prevState: unknown, formData: FormData) {
@@ -41,6 +42,15 @@ export async function signInWithCredentials(prevState: unknown, formData: FormDa
 
 // Handles user sign-out.
 export async function signOutUser() {
+  // get current users cart and delete it so it does not persist to next user
+  const currentCart = await getMyCart();
+
+  if (currentCart?.id) {
+    await prisma.cart.delete({ where: { id: currentCart.id } });
+  } else {
+    console.warn("No cart found for deletion.");
+  }
+
   // Calls the `signOut` function to log the user out.
   await signOut();
 }

@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"; // Imports the clsx function and ClassValue type from clsx.
 import { twMerge } from "tailwind-merge"; // Imports the twMerge function from tailwind-merge.
+import qs from "query-string";
 
 /**
  * This function `cn` merges class names using clsx and tailwind-merge.
@@ -158,3 +159,21 @@ export const formatDateTime = (dateString: Date) => {
 // console.log("Full DateTime:", formatted.dateTime); // Expected output: "Oct 25, 2023, 1:30 AM" (adjusted for timezone)
 // console.log("Date Only:", formatted.dateOnly); // Expected output: "Wed, Oct 25, 2023"
 // console.log("Time Only:", formatted.timeOnly); // Expected output: "1:30 AM" (adjusted for timezone)
+
+// Form Pagination Links
+export function formUrlQuery({ params, key, value }: { params: string; key: string; value: string | null }) {
+  //
+  const query = qs.parse(params);
+
+  //
+  query[key] = value;
+
+  //
+  return qs.stringifyUrl(
+    {
+      url: window.location.pathname,
+      query
+    },
+    { skipNull: true }
+  );
+}
