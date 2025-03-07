@@ -127,3 +127,9 @@ export const paymentResultSchema = z.object({
   email_address: z.string(), // Defines the 'email_address' field as a string.
   pricePaid: z.string() // Defines the 'pricePaid' field as a string.
 });
+
+// Defines a schema for updating a user's profile
+export const updateProfileSchema = z.object({
+  name: z.string().min(3, "Name must be at least 3 characters"),
+  email: z.string().min(3, "Email must be at least 3 characters")
+});
