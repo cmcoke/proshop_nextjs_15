@@ -177,3 +177,20 @@ export function formUrlQuery({ params, key, value }: { params: string; key: stri
     { skipNull: true }
   );
 }
+
+/* 
+   Creates a number formatter using the `Intl.NumberFormat` API to format numbers 
+   based on the "en-US" locale. This ensures numbers are displayed with proper 
+   thousands separators (e.g., 1,000 instead of 1000).
+*/
+const NUMBER_FORMATTER = new Intl.NumberFormat("en-US");
+
+/*
+   Function to format a given number using the predefined `NUMBER_FORMATTER`.
+   - `number: number` → Accepts a numeric value as an argument.
+   - `return` → Returns the formatted number as a string.
+   Example: formatNumber(1000) → "1,000"
+*/
+export function formatNumber(number: number) {
+  return NUMBER_FORMATTER.format(number);
+}
