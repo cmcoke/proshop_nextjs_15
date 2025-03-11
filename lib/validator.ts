@@ -24,6 +24,15 @@ export const insertProductSchema = z.object({
   price: currency // Validates the price using the `currency` schema defined earlier.
 });
 
+/*
+  Defines a Zod schema for updating a product.
+  - This schema extends `insertProductSchema`, meaning it inherits all the validation rules from it.
+  - Additionally, it adds an `id` field, which is required for identifying the product being updated.
+*/
+export const updateProductSchema = insertProductSchema.extend({
+  id: z.string().min(1, "Id is required") // // Validates that the id is a string with at least 1 character. If the `id` is missing or empty, an error message "Id is required" will be displayed.
+});
+
 // Defines the schema for user sign-in form validation.
 export const signInFormSchema = z.object({
   email: z.string().email("Invalid email address").min(3, "Email must be at least 3 characters"), // Ensures the email is a valid email address and has at least 3 characters.
