@@ -18,13 +18,13 @@ const AdminProductsPage = async (props: {
   const searchParams = await props.searchParams;
 
   const page = Number(searchParams.page) || 1;
-  const searchText = searchParams.query || "";
-  const category = searchParams.category || "";
+  // const searchText = searchParams.query || "";
+  // const category = searchParams.category || "";
 
   const products = await getAllProducts({
-    query: searchText,
-    page,
-    category
+    page
+    // query: searchText,
+    // category
   });
 
   // console.log(products);
