@@ -45,3 +45,14 @@ export const productDefaultValues = {
   isFeatured: false,
   banner: null
 };
+
+/*
+  Defines the `USER_ROLES` constant, which determines the available user roles in the application.
+
+  - It first checks if the `USER_ROLES` environment variable is defined.
+  - If `USER_ROLES` exists, it splits the string by ", " to create an array of roles.
+  - If `USER_ROLES` is not set, it defaults to `["admin", "user"]`.
+*/
+export const USER_ROLES = process.env.USER_ROLES
+  ? process.env.USER_ROLES.split(", ") // Converts a comma-separated string into an array of roles
+  : ["admin", "user"]; // Default roles if no environment variable is set

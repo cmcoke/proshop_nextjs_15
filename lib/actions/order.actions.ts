@@ -350,45 +350,73 @@ export async function getOrderSummary() {
   };
 }
 
-/* 
-   Retrieves all orders for the admin panel with pagination support.
+/*
+  Retrieves a paginated list of orders from the database with optional search filtering.
 
-   Parameters:
-   - `limit` (optional): Specifies the number of orders per page. Defaults to `PAGE_SIZE`.
-   - `page`: The current page number for pagination.
+  Parameters:
+  - `limit` (optional): The maximum number of orders to retrieve per page (default: PAGE_SIZE).
+  - `page`: The current page number for pagination.
+  - `query`: A search term to filter orders based on the user's name.
 
-   Returns:
-   - `data`: An array of orders with user details.
-   - `totalPages`: The total number of pages based on the number of orders and the limit.
+  Returns:
+  - An object containing:
+    - `data`: An array of orders matching the criteria.
+    - `totalPages`: The total number of pages based on the order count and page size.
 */
-export async function getAllOrders({ limit = PAGE_SIZE, page }: { limit?: number; page: number }) {
+export async function getAllOrders({ limit = PAGE_SIZE, page, query }: { limit?: number; page: number; query: string }) {
   /*
-     Fetches a paginated list of orders from the database.
-     - Orders are sorted in descending order based on `createdAt` (latest first).
-     - `take: limit` → Limits the number of orders retrieved per page.
-     - `skip: (page - 1) * limit` → Skips records to fetch the correct page.
-     - `include: { user: { select: { name: true } } }` → Includes the user's name for each order.
+    Constructs a query filter for searching orders by user name.
+    - If a query is provided and it's not "all", it filters orders based on the user's name.
+    - Uses a case-insensitive search (`mode: "insensitive"`).
+    - Otherwise, an empty filter is used, meaning all orders are retrieved.
+    
+    Note: `Prisma.StringFilter` is explicitly used for type assertion to ensure TypeScript recognizes 
+    the filter object as a valid Prisma string filtering condition.
+  */
+  const queryFilter: Prisma.OrderWhereInput =
+    query && query !== "all"
+      ? {
+          user: {
+            name: {
+              contains: query, // Searches for orders where the user's name contains the query string.
+              mode: "insensitive" // Makes the search case-insensitive.
+            } as Prisma.StringFilter // Explicitly asserts the type to Prisma's string filter to ensure correct typing.
+          }
+        }
+      : {};
+
+  /*
+    Fetches a paginated list of orders from the database.
+    - `where: { ...queryFilter }`: Applies the query filter (if any).
+    - `orderBy: { createdAt: "desc" }`: Orders results by creation date, newest first.
+    - `take: limit`: Limits the number of results per page.
+    - `skip: (page - 1) * limit`: Skips records based on the current page number.
+    - `include: { user: { select: { name: true } } }`: Includes the user data but only retrieves the user's name.
   */
   const data = await prisma.order.findMany({
+    where: {
+      ...queryFilter
+    },
     orderBy: { createdAt: "desc" },
     take: limit,
     skip: (page - 1) * limit,
     include: { user: { select: { name: true } } }
   });
 
-  /* 
-     Counts the total number of orders in the database 
-     to determine the total number of pages.
+  /*
+    Counts the total number of orders in the database (ignoring pagination).
+    - Used to calculate the total number of pages for pagination.
   */
   const dataCount = await prisma.order.count();
 
-  /* 
-     Returns the retrieved orders and calculates the total pages. 
-     - `totalPages` is determined by dividing `dataCount` by `limit` and rounding up.
+  /*
+    Returns the fetched order data along with the total number of pages.
+    - `data`: The retrieved orders.
+    - `totalPages`: The total number of pages based on the total order count and page size.
   */
   return {
     data,
-    totalPages: Math.ceil(dataCount / limit)
+    totalPages: Math.ceil(dataCount / limit) // Calculates the total number of pages.
   };
 }
 

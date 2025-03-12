@@ -142,3 +142,40 @@ export const updateProfileSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
   email: z.string().min(3, "Email must be at least 3 characters")
 });
+
+/*
+  Updating a user.
+
+  This schema extends the `updateProfileSchema` and adds additional validation 
+  for user properties such as `id`, `name`, and `role`.
+
+  Fields:
+  - `id`: Required string with a minimum length of 1 (ensures an ID is provided).
+  - `name`: Required string with a minimum length of 3 characters.
+  - `role`: Required string with a minimum length of 1 (ensures a role is provided).
+*/
+export const updateUserSchema = updateProfileSchema.extend({
+  /*
+    Validates the `id` field.
+    - Must be a string.
+    - Must have at least 1 character.
+    - Displays an error message "Id is required" if the field is empty.
+  */
+  id: z.string().min(1, "Id is required"),
+
+  /*
+    Validates the `name` field.
+    - Must be a string.
+    - Must have at least 3 characters.
+    - Displays an error message "Name must be at least 3 characters" if validation fails.
+  */
+  name: z.string().min(3, "Name must be at least 3 characters"),
+
+  /*
+    Validates the `role` field.
+    - Must be a string.
+    - Must have at least 1 character.
+    - Displays an error message "Role is required" if the field is empty.
+  */
+  role: z.string().min(1, "Role is required")
+});

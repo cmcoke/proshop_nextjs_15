@@ -7,13 +7,16 @@
 
 import { isRedirectError } from "next/dist/client/components/redirect-error"; // Imports a helper function to handle redirect-related errors.
 import { auth, signIn, signOut } from "@/auth"; // Imports `signIn` and `signOut` functions for managing user authentication.
-import { shippingAddressSchema, signInFormSchema, signUpFormSchema, paymentMethodSchema } from "../validator"; // Imports various schemas for validation from the validator file.
+import { shippingAddressSchema, signInFormSchema, signUpFormSchema, paymentMethodSchema, updateUserSchema } from "../validator"; // Imports various schemas for validation from the validator file.
 import { hashSync } from "bcrypt-ts-edge"; // Imports the hashSync function from bcrypt-ts-edge for password hashing.
 import { prisma } from "@/db/prisma"; // Imports the Prisma client for interacting with the database.
 import { formatError } from "../utils";
 import { ShippingAddress } from "@/types";
 import { z } from "zod"; // Imports Zod for schema validation.
 import { getMyCart } from "./cart.actions";
+import { PAGE_SIZE } from "../constants";
+import { revalidatePath } from "next/cache";
+import { Prisma } from "@prisma/client";
 
 // Handles user sign-in with email and password credentials.
 export async function signInWithCredentials(prevState: unknown, formData: FormData) {
@@ -212,6 +215,163 @@ export async function updateProfile(user: { name: string; email: string }) {
       message: "User updated successfully"
     };
   } catch (error) {
+    return { success: false, message: formatError(error) };
+  }
+}
+
+/*
+  Fetches a list of users from the database with pagination and optional search.
+
+  Parameters:
+  - `limit`: The number of users to fetch per page (defaults to `PAGE_SIZE` if not provided).
+  - `page`: The current page number to retrieve.
+  - `query`: A search query for filtering users by name.
+
+  Returns:
+  - An object containing the list of users (`data`) and the total number of pages based on the `limit`.
+*/
+export async function getAllUsers({ limit = PAGE_SIZE, page, query }: { limit?: number; page: number; query: string }) {
+  /*
+    Constructs a query filter based on the provided `query` string.
+    - If a query is provided and is not "all", it filters users by name.
+    - Uses a case-insensitive search (`mode: "insensitive"`).
+    - Otherwise, it returns an empty filter, meaning no name filtering is applied.
+
+    Note: `Prisma.StringFilter` ensures that the query is typed correctly for string filtering in Prisma.
+  */
+  const queryFilter: Prisma.UserWhereInput =
+    query && query !== "all"
+      ? {
+          name: {
+            contains: query, // Searches for users where their name contains the `query` string.
+            mode: "insensitive" // Makes the search case-insensitive.
+          } as Prisma.StringFilter // Type assertion to `Prisma.StringFilter` ensures proper Prisma typing for string filters.
+        }
+      : {};
+
+  /*
+    Retrieves a list of users from the database using the Prisma `findMany` method.
+    - Applies the constructed `queryFilter` to filter users by name if a valid query is provided.
+    - Orders the users by the `createdAt` field in descending order (`desc`).
+    - Limits the results to `limit` items per page, and skips the appropriate number of items based on the current page (`skip: (page - 1) * limit`).
+  */
+  const data = await prisma.user.findMany({
+    where: {
+      ...queryFilter // Applies the dynamic filter for user names (if applicable).
+    },
+    orderBy: { createdAt: "desc" }, // Orders the users by creation date in descending order.
+    take: limit, // Limits the number of users fetched to the specified `limit`.
+    skip: (page - 1) * limit // Skips a number of users based on the current `page` to implement pagination.
+  });
+
+  /*
+    Retrieves the total count of users in the database to calculate the total number of pages.
+    - This is used for pagination, ensuring that the correct number of pages is returned.
+  */
+  const dataCount = await prisma.user.count();
+
+  /*
+    Returns an object containing:
+    - `data`: The list of users fetched from the database.
+    - `totalPages`: The total number of pages based on the `dataCount` divided by the `limit`, rounded up.
+  */
+  return {
+    data, // The list of users returned from the database.
+    totalPages: Math.ceil(dataCount / limit) // The total number of pages, calculated by dividing the total count by the limit and rounding up.
+  };
+}
+
+/*
+  Deletes a user from the database based on the provided user ID.
+
+  Parameters:
+  - `id`: The unique identifier of the user to be deleted.
+
+  Returns:
+  - An object with `success: true` if the deletion is successful.
+  - An object with `success: false` and an error message if the deletion fails.
+*/
+export async function deleteUser(id: string) {
+  try {
+    /*
+      Deletes the user record from the database.
+      - `prisma.user.delete()`: Removes the user record.
+      - `where: { id }`: Specifies the user ID that should be deleted.
+    */
+    await prisma.user.delete({ where: { id } });
+
+    /*
+      Revalidates the admin users page to ensure the UI reflects the updated user list.
+      - `/admin/users`: The path of the admin page that displays users.
+    */
+    revalidatePath("/admin/users");
+
+    /*
+      Returns a success response after the user is deleted.
+      - `success: true`: Indicates the operation was successful.
+      - `message: "User deleted successfully"`: Confirmation message.
+    */
+    return {
+      success: true,
+      message: "User deleted successfully"
+    };
+  } catch (error) {
+    /*
+      Catches any errors that occur during the deletion process.
+      - Returns a failure response with the error message formatted using `formatError`.
+    */
+    return { success: false, message: formatError(error) };
+  }
+}
+
+/*
+  Updates a user's information in the database.
+
+  Parameters:
+  - `user`: An object inferred from `updateUserSchema`, containing user data with:
+    - `id`: The unique identifier of the user.
+    - `name`: The updated name of the user.
+    - `role`: The updated role of the user.
+
+  Returns:
+  - An object with `success: true` if the update is successful.
+  - An object with `success: false` and an error message if the update fails.
+*/
+export async function updateUser(user: z.infer<typeof updateUserSchema>) {
+  try {
+    /*
+      Updates the user in the database using Prisma's `update` method.
+      - `where: { id: user.id }`: Finds the user by their unique `id`.
+      - `data`: Specifies the updated fields (`name` and `role`).
+    */
+    await prisma.user.update({
+      where: { id: user.id }, // Finds the user by their ID
+      data: {
+        name: user.name, // Updates the user's name
+        role: user.role // Updates the user's role
+      }
+    });
+
+    /*
+      Revalidates the user management page in the admin panel.
+      - Ensures the UI reflects the latest user data after the update.
+    */
+    revalidatePath("/admin/users");
+
+    /*
+      Returns a success response after updating the user.
+      - `success: true`: Indicates the update was successful.
+      - `message: "User updated successfully"`: Confirmation message.
+    */
+    return {
+      success: true,
+      message: "User updated successfully"
+    };
+  } catch (error) {
+    /*
+      Catches any errors that occur during the update process.
+      - Returns a failure response with the error message formatted using `formatError`.
+    */
     return { success: false, message: formatError(error) };
   }
 }

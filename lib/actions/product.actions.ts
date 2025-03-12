@@ -6,6 +6,7 @@ import { LATEST_PRODUCTS_LIMIT, PAGE_SIZE } from "../constants"; // Imports the 
 import { revalidatePath } from "next/cache";
 import { insertProductSchema, updateProductSchema } from "../validator";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 
 /**
  * Get latest products
@@ -32,19 +33,112 @@ export async function getProductBySlug(slug: string) {
   });
 }
 
-// Get all products
-export async function getAllProducts({ limit = PAGE_SIZE, page }: { limit?: number; page: number }) {
+/*
+  Retrieves a paginated list of products with optional filters for search query, category, price, rating, and sorting.
+
+  Parameters:
+  - `query`: A search string used to filter products by name.
+  - `limit`: The maximum number of products per page (default: `PAGE_SIZE`).
+  - `page`: The current page number for pagination.
+  - `category`: A filter to retrieve products by category.
+  - `price`: A price range filter in the format "min-max".
+  - `rating`: A minimum rating filter.
+  - `sort`: Sorting criteria (e.g., "lowest", "highest", "rating").
+
+  Returns:
+  - An object containing:
+    - `data`: The list of products matching the filters.
+    - `totalPages`: The total number of pages based on the filtered product count.
+*/
+export async function getAllProducts({ query, limit = PAGE_SIZE, page, category, price, rating, sort }: { query: string; limit?: number; page: number; category?: string; price?: string; rating?: string; sort?: string }) {
+  /*
+    Creates a query filter for searching products by name.
+    - Uses `contains` for partial matching.
+    - `mode: "insensitive"` makes the search case-insensitive.
+    - If `query` is "all" or empty, no filtering is applied.
+  */
+  const queryFilter: Prisma.ProductWhereInput =
+    query && query !== "all"
+      ? {
+          name: {
+            contains: query,
+            mode: "insensitive"
+          } as Prisma.StringFilter
+        }
+      : {};
+
+  /*
+    Creates a category filter if a specific category is selected.
+    - If `category` is "all" or empty, no filtering is applied.
+  */
+  const categoryFilter = category && category !== "all" ? { category } : {};
+
+  /*
+    Creates a price range filter.
+    - Extracts min and max values from the `price` string ("min-max").
+    - Uses `gte` (greater than or equal) and `lte` (less than or equal) to filter products within the range.
+    - If `price` is "all" or empty, no filtering is applied.
+  */
+  const priceFilter: Prisma.ProductWhereInput =
+    price && price !== "all"
+      ? {
+          price: {
+            gte: Number(price.split("-")[0]), // Minimum price
+            lte: Number(price.split("-")[1]) // Maximum price
+          }
+        }
+      : {};
+
+  /*
+    Creates a rating filter.
+    - Filters products with a rating greater than or equal to the specified `rating`.
+    - If `rating` is "all" or empty, no filtering is applied.
+  */
+  const ratingFilter =
+    rating && rating !== "all"
+      ? {
+          rating: {
+            gte: Number(rating) // Minimum rating
+          }
+        }
+      : {};
+
+  /*
+    Retrieves products from the database with applied filters and sorting.
+    - `where`: Combines all active filters (`queryFilter`, `categoryFilter`, `priceFilter`, `ratingFilter`).
+    - `orderBy`: Sorts products based on the selected sorting option:
+      - `"lowest"`: Sorts by price in ascending order.
+      - `"highest"`: Sorts by price in descending order.
+      - `"rating"`: Sorts by rating in descending order.
+      - Default: Sorts by creation date in descending order (latest products first).
+    - `skip`: Skips products based on the current page (pagination logic).
+    - `take`: Limits the number of products per page.
+  */
   const data = await prisma.product.findMany({
-    orderBy: { createdAt: "desc" },
-    skip: (page - 1) * limit,
-    take: limit
+    where: {
+      ...queryFilter,
+      ...categoryFilter,
+      ...priceFilter,
+      ...ratingFilter
+    },
+    orderBy: sort === "lowest" ? { price: "asc" } : sort === "highest" ? { price: "desc" } : sort === "rating" ? { rating: "desc" } : { createdAt: "desc" }, // Default sorting by newest products
+    skip: (page - 1) * limit, // Calculates offset for pagination
+    take: limit // Limits the number of results per page
   });
 
+  /*
+    Retrieves the total number of products (ignoring filters) for pagination calculations.
+  */
   const dataCount = await prisma.product.count();
 
+  /*
+    Returns the product data along with the total number of pages.
+    - `data`: The list of filtered products.
+    - `totalPages`: The total number of pages based on the product count.
+  */
   return {
     data,
-    totalPages: Math.ceil(dataCount / limit)
+    totalPages: Math.ceil(dataCount / limit) // Calculates total pages for pagination
   };
 }
 
