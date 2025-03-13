@@ -26,7 +26,7 @@ export function ProductCarousel({ data }: { data: Product[] }) {
           <CarouselItem key={product.id}>
             <Link href={`/product/${product.slug}`}>
               <div className="relative   mx-auto  ">
-                <Image alt={product.name} src={product.banner!} width="0" height="0" sizes="100vw" className="w-full h-auto" />
+                <Image alt={product.name} src={product.banner!} width="0" height="0" sizes="100vw" className="w-full h-auto" priority={true} />
                 <div className="absolute inset-0 flex items-end justify-center">
                   <h2 className=" bg-gray-900 bg-opacity-50 text-2xl font-bold px-2 text-white  ">{product.name}</h2>
                 </div>

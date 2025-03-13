@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Menu from "./menu";
 import CategoriesDrawer from "./categories-drawer";
+import Search from "./search";
 
 const Header = () => {
   return (
@@ -14,6 +15,9 @@ const Header = () => {
             <Image src="/images/logo.svg" width={48} height={48} alt={`${APP_NAME} logo`} className="ml-4" />
             <span className="hidden lg:block font-bold text-2xl ml-3">{APP_NAME}</span>
           </Link>
+        </div>
+        <div className="hidden md:block">
+          <Search />
         </div>
         <Menu />
       </div>
