@@ -8,28 +8,33 @@ import { insertProductSchema, updateProductSchema } from "../validator";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 
-/**
- * Get latest products
- * This function `getLatestProducts` fetches the latest products from the database.
- * It retrieves a limited number of products ordered by the creation date in descending order.
- **/
+/*
+  Fetches the latest products from the database, ordered by creation date.
+
+  Returns:
+  - An array of the most recently created product objects, converted to plain objects.
+*/
 export async function getLatestProducts() {
   const data = await prisma.product.findMany({
-    take: LATEST_PRODUCTS_LIMIT, // Limits the number of products fetched to the specified constant.
-    orderBy: { createdAt: "desc" } // Orders the products by creation date in descending order.
+    take: LATEST_PRODUCTS_LIMIT, // Limits the number of products retrieved to the specified latest products limit.
+    orderBy: { createdAt: "desc" } // Orders the products by creation date in descending order (newest first).
   });
 
-  return convertToPlainObject(data); // Converts the fetched data to plain objects.
+  return convertToPlainObject(data); // Converts the retrieved data into plain JavaScript objects for better handling.
 }
 
-/**
- * Get single product by slug
- * This function `getProductBySlug` fetches a single product from the database based on the given slug.
- * @param slug - String representing the unique identifier of the product.
- **/
+/*
+  Fetches a single product from the database based on its unique slug.
+
+  Parameters:
+  - `slug`: A string representing the unique identifier (slug) of the product.
+
+  Returns:
+  - The product object if found, otherwise `null`.
+*/
 export async function getProductBySlug(slug: string) {
   return await prisma.product.findFirst({
-    where: { slug: slug } // Finds the first product that matches the given slug.
+    where: { slug: slug } // Searches for a product where the `slug` field matches the provided slug.
   });
 }
 
@@ -335,4 +340,53 @@ export async function getProductById(productId: string) {
     - This helps with serialization and prevents potential issues when passing data to the frontend.
   */
   return convertToPlainObject(data);
+}
+
+/*
+  Fetches all unique product categories from the database along with their count.
+
+  Parameters:
+  - None
+
+  Returns:
+  - An array of objects, where each object contains:
+    - `category`: The unique category name.
+    - `_count`: The number of products in that category.
+*/
+export async function getAllCategories() {
+  /*
+    Queries the database to group products by their category.
+    - `by: ['category']`: Groups the products based on the `category` field.
+    - `_count: true`: Counts the number of products in each category.
+    
+    The result will be an array of objects, each containing:
+    - `category`: The name of the category.
+    - `_count`: The number of products that belong to this category.
+  */
+  const data = await prisma.product.groupBy({
+    by: ["category"], // Groups products by the `category` field.
+    _count: true // Counts the number of products in each category.
+  });
+
+  /*
+    Returns the grouped category data.
+    - Example output: [{ category: "Electronics", _count: 5 }, { category: "Clothing", _count: 8 }]
+  */
+  return data;
+}
+
+/*
+  Fetches featured products from the database.
+
+  Returns:
+  - An array of up to 4 featured product objects, ordered by creation date.
+*/
+export async function getFeaturedProducts() {
+  const data = await prisma.product.findMany({
+    where: { isFeatured: true }, // Filters the products to include only those marked as featured.
+    orderBy: { createdAt: "desc" }, // Orders the products by creation date in descending order (newest first).
+    take: 4 // Limits the number of products retrieved to 4.
+  });
+
+  return convertToPlainObject(data); // Converts the retrieved data into plain JavaScript objects for better handling.
 }

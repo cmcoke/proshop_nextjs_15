@@ -2,14 +2,16 @@ import { APP_NAME } from "@/lib/constants";
 import Image from "next/image";
 import Link from "next/link";
 import Menu from "./menu";
+import CategoriesDrawer from "./categories-drawer";
 
 const Header = () => {
   return (
     <header className="w-full border-b">
       <div className="wrapper flex-between">
         <div className="flex-start">
+          <CategoriesDrawer />
           <Link href="/" className="flex-start">
-            <Image src="/images/logo.svg" width={48} height={48} alt={`${APP_NAME} logo`} />
+            <Image src="/images/logo.svg" width={48} height={48} alt={`${APP_NAME} logo`} className="ml-4" />
             <span className="hidden lg:block font-bold text-2xl ml-3">{APP_NAME}</span>
           </Link>
         </div>
