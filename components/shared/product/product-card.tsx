@@ -9,6 +9,7 @@ import Link from "next/link"; // Imports the Link component from Next.js for cli
 import { Product } from "@/types"; // Imports the Product type definition.
 import { Card, CardContent, CardHeader } from "@/components/ui/card"; // Imports Card components from the UI library.
 import ProductPrice from "./product-price"; // Imports the ProductPrice component for displaying product prices.
+import Rating from "./rating";
 
 /**
  * This function `ProductCard` defines a card component that displays product information.
@@ -28,7 +29,7 @@ const ProductCard = ({ product }: { product: Product }) => {
           <h2 className="text-sm font-medium">{product.name}</h2>
         </Link>
         <div className="flex-between gap-4">
-          <p>{product.rating} stars</p>
+          <Rating value={Number(product.rating)} />
           {/* Displays the product price if in stock, otherwise shows "Out of Stock" */}
           {product.stock > 0 ? <ProductPrice value={Number(product.price)} /> : <p className="text-destructive">Out of Stock</p>}
         </div>
