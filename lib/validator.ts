@@ -179,3 +179,28 @@ export const updateUserSchema = updateProfileSchema.extend({
   */
   role: z.string().min(1, "Role is required")
 });
+
+// Insert Review Schema
+export const insertReviewSchema = z.object({
+  title: z
+    .string() // Ensures the "title" field is a string.
+    .min(3, "Title must be at least 3 characters"), // Requires at least 3 characters; otherwise, an error message is returned.
+
+  description: z
+    .string() // Ensures the "description" field is a string.
+    .min(3, "Description must be at least 3 characters"), // Requires at least 3 characters; otherwise, an error message is returned.
+
+  productId: z
+    .string() // Ensures the "productId" field is a string.
+    .min(1, "Product is required"), // Requires at least 1 character to ensure it's not empty; otherwise, an error message is returned.
+
+  userId: z
+    .string() // Ensures the "userId" field is a string.
+    .min(1, "User is required"), // Requires at least 1 character to ensure it's not empty; otherwise, an error message is returned.
+
+  rating: z.coerce // Uses `coerce` to automatically convert input values (e.g., from strings) to numbers if possible.
+    .number() // Ensures the "rating" field is a number.
+    .int() // Ensures the rating is an integer (no decimals allowed).
+    .min(1, "Rating must be at least 1") // Requires the rating to be at least 1; otherwise, an error message is returned.
+    .max(5, "Rating must be at most 5") // Requires the rating to be at most 5; otherwise, an error message is returned.
+});

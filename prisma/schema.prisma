@@ -33,6 +33,7 @@ model Product {
   banner      String? // Optional URL for the product's banner image.
   createdAt   DateTime    @default(now()) @db.Timestamp(6) // Sets the "createdAt" field to store the exact timestamp with up to 6 fractional seconds precision in the database.
   OrderItem   OrderItem[] // Defines a one-to-many relationship with the OrderItem model, indicating that a product can be associated with multiple order items.
+  Review      Review[] // Defines a one-to-many relationship with the Review model, indicating that a product can be associated with multiple reviews.
 }
 
 // This represents the "User" model, defining the structure of the user table.
@@ -52,6 +53,7 @@ model User {
   session       Session[] // Relationship with the Session model, one user can have multiple sessions.
   Cart          Cart[] // Relationship with the Cart model, one user can have multiple carts.
   Order         Order[] // Relationship with the Order model, one user can have multiple orders.
+  Review        Review[] // Relationship with the Review model, one user can have multiple reviews.
 }
 
 // This represents the "Account" model, defining third-party provider accounts for a user.
@@ -184,4 +186,30 @@ model OrderItem {
   // Defines a composite primary key for the OrderItem model, consisting of the `orderId` and `productId` fields.
   // The `map: "orderItems_orderId_productId_pk"` option specifies the name of the primary key constraint in the database.
   @@id([orderId, productId], map: "orderItems_orderId_productId_pk")
+}
+
+// The Review model defines the structure of a product review in the database.
+model Review {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // The unique identifier for the review, generated automatically using a random UUID.
+  userId             String   @db.Uuid // The unique identifier of the user who wrote the review.
+  productId          String   @db.Uuid // The unique identifier of the product being reviewed.
+  rating             Int // The rating given to the product by the user, typically on a scale (e.g., 1 to 5).
+  title              String // The title of the review, summarizing the user's experience.
+  description        String // The full text of the review, containing the user's detailed feedback.
+  isVerifiedPurchase Boolean  @default(true) // Indicates whether the review is from a verified purchase. Defaults to `true`.
+  createdAt          DateTime @default(now()) @db.Timestamp(6) // The timestamp when the review was created. Defaults to the current timestamp with microsecond precision.
+
+  // Defines a relation between the Review model and the Product model.
+  // The `product` field is a foreign key that references the `id` field in the Product model.
+  // The `onDelete: Cascade` option means that when a product is deleted, all its associated reviews will also be deleted.
+  // The `onUpdate: NoAction` option means that when a product's ID is updated, no action will be taken on the associated reviews.
+  // The `map: "reviews_productId_product_id_fk"` option specifies the name of the foreign key constraint in the database.
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "reviews_productId_product_id_fk")
+
+  // Defines a relation between the Review model and the User model.
+  // The `user` field is a foreign key that references the `id` field in the User model.
+  // The `onDelete: Cascade` option means that when a user is deleted, all their reviews will also be deleted.
+  // The `onUpdate: NoAction` option means that when a user's ID is updated, no action will be taken on the associated reviews.
+  // The `map: "reviews_userId_user_id_fk"` option specifies the name of the foreign key constraint in the database.
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "reviews_userId_user_id_fk")
 }

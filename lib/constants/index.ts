@@ -56,3 +56,9 @@ export const productDefaultValues = {
 export const USER_ROLES = process.env.USER_ROLES
   ? process.env.USER_ROLES.split(", ") // Converts a comma-separated string into an array of roles
   : ["admin", "user"]; // Default roles if no environment variable is set
+
+export const reviewFormDefaultValues = {
+  title: "",
+  comment: "",
+  rating: 0
+};
