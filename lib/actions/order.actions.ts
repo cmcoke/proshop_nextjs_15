@@ -206,7 +206,7 @@ export async function approvePayPalOrder(orderId: string, data: { orderID: strin
 }
 
 // Update Order to Paid in Database
-async function updateOrderToPaid({ orderId, paymentResult }: { orderId: string; paymentResult?: PaymentResult }) {
+export async function updateOrderToPaid({ orderId, paymentResult }: { orderId: string; paymentResult?: PaymentResult }) {
   // Find the order in the database and include the order items
   const order = await prisma.order.findFirst({
     where: {
