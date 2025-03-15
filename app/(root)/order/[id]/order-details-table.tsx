@@ -1,35 +1,27 @@
-/**
- * This component, OrderDetailsTable, handles the display of order details.
- * It shows the order information, including the order ID, payment method, shipping address, order items, and order summary.
- * It also provides visual indicators for the payment and delivery statuses.
- */
+"use client";
 
-"use client"; // Indicates that this code is intended to run on the client side.
-
-import { Badge } from "@/components/ui/badge"; // Imports the Badge component from the UI library.
-import { Card, CardContent } from "@/components/ui/card"; // Imports the Card and CardContent components from the UI library.
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"; // Imports Table components from the UI library.
-import { formatCurrency, formatDateTime, formatId } from "@/lib/utils"; // Imports utility functions for formatting currency, date and time, and IDs.
-import { Order } from "@/types"; // Imports the Order type.
-import Image from "next/image"; // Imports the Image component from next/image for optimized images.
-import Link from "next/link"; // Imports the Link component from next/link for navigation links.
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatCurrency, formatDateTime, formatId } from "@/lib/utils";
+import { Order } from "@/types";
+import Image from "next/image";
+import Link from "next/link";
 import { PayPalButtons, PayPalScriptProvider, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { approvePayPalOrder, createPayPalOrder, deliverOrder, updateOrderToPaidByCOD } from "@/lib/actions/order.actions";
 import { toast } from "sonner";
 import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import StripePayment from "./stripe-payment";
 
-const OrderDetailsTable = ({ order, paypalClientId, isAdmin }: { order: Order; paypalClientId: string; isAdmin: boolean }) => {
-  // Destructures order properties for easier access.
+const OrderDetailsTable = ({ order, paypalClientId, isAdmin, stripeClientSecret }: { order: Order; paypalClientId: string; isAdmin: boolean; stripeClientSecret: string | null }) => {
   const { shippingAddress, orderitems, itemsPrice, taxPrice, shippingPrice, totalPrice, paymentMethod, isPaid, paidAt, isDelivered, deliveredAt } = order;
 
-  // Checks the loading status of the PayPal script
   const PrintLoadingState = () => {
-    const [{ isPending, isRejected }] = usePayPalScriptReducer(); //
+    const [{ isPending, isRejected }] = usePayPalScriptReducer();
 
-    let status = ""; //
+    let status = "";
 
-    //
     if (isPending) {
       status = "Loading PayPal...";
     } else if (isRejected) {
@@ -40,14 +32,14 @@ const OrderDetailsTable = ({ order, paypalClientId, isAdmin }: { order: Order; p
 
   // Creates a PayPal order
   const handleCreatePayPalOrder = async () => {
-    const res = await createPayPalOrder(order.id); //
-    if (!res.success) toast.error(res.message); //
+    const res = await createPayPalOrder(order.id);
+    if (!res.success) toast.error(res.message);
     return res.data; //
   };
 
   // Approves a PayPal order
   const handleApprovePayPalOrder = async (data: { orderID: string }) => {
-    const res = await approvePayPalOrder(order.id, data); //
+    const res = await approvePayPalOrder(order.id, data);
 
     //
     if (res.success) {
@@ -192,6 +184,8 @@ const OrderDetailsTable = ({ order, paypalClientId, isAdmin }: { order: Order; p
                   </PayPalScriptProvider>
                 </div>
               )}
+              {/* Stripe Payment */}
+              {!isPaid && paymentMethod === "Stripe" && stripeClientSecret && <StripePayment priceInCents={Number(order.totalPrice) * 100} orderId={order.id} clientSecret={stripeClientSecret} />}
               {/* Cash On Delivery */}
               {isAdmin && !isPaid && paymentMethod === "CashOnDelivery" && <MarkAsPaidButton />}
               {isAdmin && isPaid && !isDelivered && <MarkAsDeliveredButton />}
