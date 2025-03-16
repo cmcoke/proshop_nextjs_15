@@ -38,6 +38,7 @@ export type Order = z.infer<typeof insertOrderSchema> & {
   deliveredAt: Date | null; // Adds a 'deliveredAt' field of type Date or null to the Order type.
   orderitems: OrderItem[]; // Adds an 'orderitems' field which is an array of OrderItem type to the Order type.
   user: { name: string; email: string }; // Adds a 'user' field which is an object containing 'name' and 'email' fields of type string to the Order type.
+  paymentResult: PaymentResult;
 };
 
 // Defines a TypeScript type 'PaymentResult' based on the Zod schema 'paymentResultSchema'.
