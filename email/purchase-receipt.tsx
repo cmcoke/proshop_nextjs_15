@@ -3,7 +3,8 @@ import { formatCurrency } from "@/lib/utils";
 import { Order } from "@/types";
 import sampleData from "@/db/sample-data";
 
-import "dotenv/config";
+import dotenv from "dotenv";
+dotenv.config();
 
 type OrderInformationProps = {
   order: Order;
